@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Database Form</title>
+    <style>
+        /* Existing styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to right, #f6d365, #fda085);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #333;
+            margin-top: 40px;
+        }
+
+        form {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        label {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #f6a01b;
+        }
+
+        input[type="submit"],
+        button {
+            background-color: #f6a01b;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        input[type="submit"]:hover,
+        button:hover {
+            background-color: #e98a04;
+            transform: translateY(-2px);
+        }
+
+        #results {
+            max-width: 500px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            animation: slideUp 1s ease-out;
+            display: none;
+            /* Initially hide results */
+        }
+
+        #results ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        #results li {
+            padding: 10px;
+            background: #f9f9f9;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        #results li:hover {
+            background-color: #f6f6f6;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Enter Data into the Custom Database</h1>
+        <form action="/submit" method="post">
+            <label for="key">Key:</label><br>
+            <input type="text" id="key" name="key" placeholder="Enter key"><br>
+            <label for="value">Value:</label><br>
+            <input type="text" id="value" name="value" placeholder="Enter value"><br><br>
+            <input type="submit" value="Submit">
+        </form>
+
+        <h2>Actions:</h2>
+        <button onclick="displayData()">Display All Data</button>
+        <button onclick="searchData()">Search Data</button>
+        <button onclick="deleteData()">Delete Data</button>
+        <button onclick="updateData()">Update Data</button>
+
+        <div id="results">
+            <h2>Results:</h2>
+            <ul id="results-list">
+                <!-- Populated dynamically -->
+            </ul>
+        </div>
+
+        <!-- Update Form -->
+        <form id="update-form" style="display: none;">
+            <label for="update-key">Key:</label><br>
+            <input type="text" id="update-key" name="update-key" placeholder="Enter key"><br>
+            <label for="update-value">New Value:</label><br>
+            <input type="text" id="update-value" name="update-value" placeholder="Enter new value"><br><br>
+            <input type="button" value="Update" onclick="performUpdate()">
+        </form>
+    </div>
+
+    <script>
+        async function displayData() {
+            try {
+                const response = await fetch('/data');
+                const data = await response.json();
+                const resultsList = document.getElementById('results-list');
+                resultsList.innerHTML = ''; // Clear existing results
+
+                for (const [key, value] of Object.entries(data)) {
+                    const li = document.createElement('li');
+                    li.textContent = `${key}: ${value}`;
+                    resultsList.appendChild(li);
+                }
+                document.getElementById('results').style.display = 'block'; // Show results
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        async function searchData() {
+            const key = prompt('Enter the key to search for:');
+            if (key) {
+                try {
+                    const response = await fetch(`/data/${encodeURIComponent(key)}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const resultsList = document.getElementById('results-list');
+                        resultsList.innerHTML = ''; // Clear existing results
+
+                        for (const [key, value] of Object.entries(data)) {
+                            const li = document.createElement('li');
+                            li.textContent = `${key}: ${value}`;
+                            resultsList.appendChild(li);
+                        }
+                        document.getElementById('results').style.display = 'block'; // Show results
+                    } else {
+                        alert('Key not found.');
+                        document.getElementById('results').style.display = 'none'; // Hide results if not found
+                    }
+                } catch (error) {
+                    console.error('Error searching data:', error);
+                }
+            }
+        }
+
+        async function deleteData() {
+            const key = prompt('Enter the key to delete:');
+            if (key) {
+                try {
+                    const response = await fetch(`/data/${encodeURIComponent(key)}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        displayData(); // Refresh the displayed data
+                    } else {
+                        alert('Failed to delete data.');
+                    }
+                } catch (error) {
+                    console.error('Error deleting data:', error);
+                }
+            }
+        }
+
+        function updateData() {
+            document.getElementById('update-form').style.display = 'block';
+        }
+
+        async function performUpdate() {
+            const key = document.getElementById('update-key').value;
+            const newValue = document.getElementById('update-value').value;
+            if (key && newValue) {
+                try {
+                    const response = await fetch(`/update/${encodeURIComponent(key)}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ value: newValue })
+                    });
+                    if (response.ok) {
+                        displayData(); // Refresh the displayed data
+                        document.getElementById('update-form').style.display = 'none'; // Hide form after update
+                    } else {
+                        alert('Failed to update data.');
+                    }
+                } catch (error) {
+                    console.error('Error updating data:', error);
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
